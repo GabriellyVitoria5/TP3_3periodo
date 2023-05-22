@@ -52,6 +52,8 @@ public class Main {
             //...Modifique a partir daqui
             //AQUI você deve explorar a pasta, arquivos e subpastas...
             
+            long tempoI = System.currentTimeMillis();
+            
             //calcula a quantidade de "trabalhadores", de threads, com base no número de processadores siponíveis
             WorkerPrimo threads[] = new WorkerPrimo[Runtime.getRuntime().availableProcessors()];
 
@@ -113,8 +115,19 @@ public class Main {
                     numPrimo = threads[i].getMaiorPrimo();
                 }
             }
+            
+            long tempoF = System.currentTimeMillis();
+            // exibe o tempo de execução
+            
             JOptionPane.showMessageDialog(null, "O maior número primo é:" + numPrimo,
                     "resultado", JOptionPane.INFORMATION_MESSAGE);
+            
+            JOptionPane.showMessageDialog(null, ("Tempo de execução: " + 
+                    ((tempoF - tempoI) / 3600000) + "h "
+                    + ((tempoF - tempoI) % 3600000 / 60000) + "min "
+                    + ((tempoF - tempoI) % 60000 / 1000) + "seg "
+                    + ((tempoF - tempoI) % 1000) + "ms"));
         }
     }
 }
+
