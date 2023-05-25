@@ -46,22 +46,22 @@ public class WorkerPrimo extends Thread {
 
                     //leitura das linhas do arquivo
                     String linha = null;
-                    long numero;
+                    //long numero;
 
                     linha = bufLeitura.readLine();
                     while (linha != null) {
                         //String[] palavras = linha.split("[,:;?!'(){}\\s]"); // Separar palavras com base em espaços em branco e em alguns caracteres especiais
-                        String[] palavras = linha.split(" "); //separar as  palavras por espaço em branco
-                        
-                        for (String palavra : palavras) {
+                        //String[] palavras = linha.split(" "); //separar as  palavras por espaço em branco
+                        String palavras[] = linha.split("[-,\\s]"); //separar as  palavras por espaço em branco, "-" e ","
+
+                        for (String novaPalavra : palavras) {
                             // Realizar alguma ação com a palavra separada
                             //System.out.println(palavra);
                             //System.out.println(palavra.replaceAll("[,:;!?{}'()]-", ""));
 
-                            String novaPalavra = palavra.replaceAll("[,.:;?!()-]", "");
-                            //System.out.println(novaPalavra);
-                            
-                            numero = enontrarNumero(novaPalavra);
+                            //String novaPalavra = palavra.replaceAll("[,.:;?!()-]", "");
+                            //System.out.println(novaPalavra.replaceAll("[:;()]", ""));
+                            long numero = enontrarNumero(novaPalavra.replaceAll("[:;()]", "")); //trocar alguns caracteres  por String nula
                             if (numero > maiorPrimo && isPrimo(numero)) {
                                 maiorPrimo = numero;
                             }
@@ -95,7 +95,7 @@ public class WorkerPrimo extends Thread {
         return numero;
     }
 
-    //achar um jeito melhor de encontrar o primo, não é pra usar esse
+    //verificar se um número é primo com base na raiz
     private boolean isPrimo(long numero) {
         for (long i = 2; i <= numero / 2; i++) {
 
