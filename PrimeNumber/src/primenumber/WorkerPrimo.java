@@ -50,14 +50,18 @@ public class WorkerPrimo extends Thread {
 
                     linha = bufLeitura.readLine();
                     while (linha != null) {
-                        String[] palavras = linha.split("[,:;?!'(){}\\s]"); // Separar palavras com base em espaços em branco e em alguns caracteres especiais
-
+                        //String[] palavras = linha.split("[,:;?!'(){}\\s]"); // Separar palavras com base em espaços em branco e em alguns caracteres especiais
+                        String[] palavras = linha.split(" "); //separar as  palavras por espaço em branco
+                        
                         for (String palavra : palavras) {
                             // Realizar alguma ação com a palavra separada
                             //System.out.println(palavra);
                             //System.out.println(palavra.replaceAll("[,:;!?{}'()]-", ""));
 
-                            numero = enontrarNumero(palavra);
+                            String novaPalavra = palavra.replaceAll("[,.:;?!()-]", "");
+                            //System.out.println(novaPalavra);
+                            
+                            numero = enontrarNumero(novaPalavra);
                             if (numero > maiorPrimo && isPrimo(numero)) {
                                 maiorPrimo = numero;
                             }
@@ -136,4 +140,3 @@ public class WorkerPrimo extends Thread {
     }
 
 }
-
