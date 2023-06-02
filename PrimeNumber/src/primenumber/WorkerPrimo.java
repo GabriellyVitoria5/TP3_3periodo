@@ -9,13 +9,16 @@ import java.util.ArrayList;
 
 public class WorkerPrimo extends Thread {
 
-    private static ArrayList<File> tarefas = new ArrayList<>();
-    private static Object chaveTarefas = new Object();
-    private static Object chaveRecurso = new Object();
-    private static boolean existeTrabalho = true;
+    private static ArrayList<File> tarefas = new ArrayList<>(); //array contento os arquivos txt a serem lidos pelas threads
+    private static Object chaveTarefas = new Object(); //lock para acessar a lista de tarefas
+    private static Object chaveRecurso = new Object(); //lock para que as threads aguardem por novas tarefas 
+    private static boolean existeTrabalho = true; //variável de controle para indicar que há trabalho a ser feito
 
-    private long maiorPrimo = 2;
+    //variáveis para guardar o maior númro primo encontrado por uma thread e o diretório em que ela se encontra
+    private long maiorPrimo = 2; 
+    private String arquivoMaiorPrimo = null;
 
+    //construtor recebendo o array de tarefas a serem feitas
     public WorkerPrimo(ArrayList tarefas) {
         this.tarefas = tarefas;
     }
@@ -24,12 +27,19 @@ public class WorkerPrimo extends Thread {
         return maiorPrimo;
     }
 
+    public String getArquivoMaiorPrimo() {
+        return arquivoMaiorPrimo;
+    }
+
     @Override
     public void run() {
         File arquivoTexto = null;
 
+        //while executa enquanto houver trabalho ou arquivos a serem lidos no array
         while (existeTrabalho || !tarefas.isEmpty()) {
             arquivoTexto = null;
+            
+            //trecho sincronizado que determina que apenas uma thread pode pegar um arquivo do array por vez
             synchronized (chaveTarefas) {
                 if (!tarefas.isEmpty()) {
                     //"peguei" o valor da primeira posicao
@@ -38,38 +48,45 @@ public class WorkerPrimo extends Thread {
                 }
             }
 
+            //se não for nulo, o arquivo deve ser lido para encontrar o maior número primo
             if (arquivoTexto != null) {
                 //acessar o conteúdo do arquivo
                 try {
+                    //variáveis para permitir a leitura do arquivo de texto
                     FileReader marcaLeitura = new FileReader(arquivoTexto);
                     BufferedReader bufLeitura = new BufferedReader(marcaLeitura);
 
                     //leitura das linhas do arquivo
                     String linha = null;
-                    //long numero;
-
                     linha = bufLeitura.readLine();
                     while (linha != null) {
-                        //String[] palavras = linha.split("[,:;?!'(){}\\s]"); // Separar palavras com base em espaços em branco e em alguns caracteres especiais
-                        //String[] palavras = linha.split(" "); //separar as  palavras por espaço em branco
-                        String palavras[] = linha.split("[-,\\s]"); //separar as  palavras por espaço em branco, "-" e ","
-
+                        //separar a linha em palavras sempere que houver espaços em branco, "-" e ","
+                        String palavras[] = linha.split("[-,\\s]"); 
+                        
+                        /*
+                        Ainda é presiso "limpar" cada palavra para não ter nenhum caractere junto a ela, 
+                        pois se houver um número junto com outro caractere haverá erro na conversão de String para long 
+                        Por exemplo: (1234), o número 1234 deve ser separado dos parêntesis
+                        */
                         for (String novaPalavra : palavras) {
-                            // Realizar alguma ação com a palavra separada
-                            //System.out.println(palavra);
-                            //System.out.println(palavra.replaceAll("[,:;!?{}'()]-", ""));
-
-                            //String novaPalavra = palavra.replaceAll("[,.:;?!()-]", "");
-                            //System.out.println(novaPalavra.replaceAll("[:;()]", ""));
-                            long numero = enontrarNumero(novaPalavra.replaceAll("[:;()]", "")); //trocar alguns caracteres  por String nula
+                            /*
+                            Para cada palavra são trocados os caracteres especificados por String nula
+                            Só depois é chamado o método encontrarNumero que vai tentar converser a palavra encontrada para um número
+                            */
+                            long numero = enontrarNumero(novaPalavra.replaceAll("[:;+()]", "")); 
+                            
+                            /*
+                            se o número encontrado não for maior que o primo atual ele já não se candidata a ser o maior primo
+                            só depois é chamado o método para verificar se o número é um primo
+                            */
                             if (numero > maiorPrimo && isPrimo(numero)) {
                                 maiorPrimo = numero;
+                                //arquivoMaiorPrimo = arquivoTexto.getAbsolutePath();
                             }
 
                         }
                         linha = bufLeitura.readLine();
                     }
-
                 } catch (FileNotFoundException ex) {
                     System.err.println("Arquivo não existe no dir.");
                 } catch (IOException ex) {
@@ -77,66 +94,59 @@ public class WorkerPrimo extends Thread {
                 }
             }
 
+            /*
+            Não há mais arquivos textos a serem lido, mas pode existir mais trabalho a ser adicionado no futuro, 
+            Então deve ocorrer a modificação do status da thread para "aguandado" novas tarefas
+            */
             if (arquivoTexto == null && existeTrabalho) {
-                //deve ocorrer a modificação do status da thread para "aguandado" novas tarefas
                 aguarde();
             }
         }
     }
 
-    //encontrar se a palavra encontrada em uma linha é um número
+    //verificar se a palavra encontrada em uma linha é um número e retornar esse número
     private long enontrarNumero(String str) {
         long numero;
         try {
-            numero = Long.parseLong(str);
+            numero = Long.parseLong(str); //conversão de String para long foi um sucesso, encontrou um número
         } catch (NumberFormatException e) {
-            numero = 0;
+            numero = 0; //exceção na conversão de String para long, tentou converter uma palavra para número 
         }
         return numero;
     }
 
-    //verificar se um número é primo com base na raiz
+    //verificar se um número é primo com base em sua raiz
     private boolean isPrimo(long numero) {
         for (long i = 2; i <= numero / 2; i++) {
-
             if ((numero % i) == 0) {
-                return false; //Assim que encontra um divisor, sabe que o número não é primo.
+                return false; //assim que encontra um divisor, sabe-se que o número não é primo.
             }
         }
         return true; //não encontrou divisores, o número é primo
-
-        /*int quantDivExatas = 0;
-
-        for (int div = 2; div <= numero - 1; div++) {
-            if (numero % div == 0) {
-                quantDivExatas++;
-            }
-        }
-
-        return quantDivExatas == 0;
-         */
     }
 
+    //sinalizar que as threads devem aguardar a adição de mais trabalho no futuro, assim ela não "morre"  
     public void aguarde() {
         synchronized (chaveRecurso) {
             try {
                 //não temos mais trabalho vamos aguardar novos dados...
                 chaveRecurso.wait();
             } catch (InterruptedException ex) {
-                System.err.println("existe threads aguardando recurso");
+                System.err.println("existem threads aguardando recurso");
             }
         }
     }
 
+    //sinalizar para as threads que elas devem acordar, pode ser que haja trabalho a fazer
     public static void acordaThreads() {
         synchronized (chaveRecurso) {
             chaveRecurso.notifyAll();
         }
     }
 
+    //sinalizar para as threads que não existe mais trabalho a ser executado
     public static void termina() {
         existeTrabalho = false;
         acordaThreads();
     }
-
 }
