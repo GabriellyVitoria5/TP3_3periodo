@@ -61,7 +61,7 @@ public class WorkerPrimo extends Thread {
                     linha = bufLeitura.readLine();
                     while (linha != null) {
                         //separar a linha em palavras sempere que houver espaços em branco, "-" e ","
-                        String palavras[] = linha.split("[-,\\s]"); 
+                        String palavras[] = linha.split("[-,;\\s]"); 
                         
                         /*
                         Ainda é presiso "limpar" cada palavra para não ter nenhum caractere junto a ela, 
@@ -73,14 +73,16 @@ public class WorkerPrimo extends Thread {
                             Para cada palavra são trocados os caracteres especificados por String nula
                             Só depois é chamado o método encontrarNumero que vai tentar converser a palavra encontrada para um número
                             */
-                            long numero = enontrarNumero(novaPalavra.replaceAll("[:;+()]", "")); 
+                            double numero = enontrarNumero(novaPalavra.replaceAll("[:;+()]", "")); 
+                            long parteInteira = (long) Math.floor(numero);
+                            //System.out.println(numero + " - " + parteInteira);
                             
                             /*
                             se o número encontrado não for maior que o primo atual ele já não se candidata a ser o maior primo
                             só depois é chamado o método para verificar se o número é um primo
                             */
-                            if (numero > maiorPrimo && isPrimo(numero)) {
-                                maiorPrimo = numero;
+                            if (parteInteira > maiorPrimo && isPrimo(parteInteira)) {
+                                maiorPrimo = parteInteira;
                                 //arquivoMaiorPrimo = arquivoTexto.getAbsolutePath();
                             }
 
@@ -105,10 +107,10 @@ public class WorkerPrimo extends Thread {
     }
 
     //verificar se a palavra encontrada em uma linha é um número e retornar esse número
-    private long enontrarNumero(String str) {
-        long numero;
+    private double enontrarNumero(String str) {
+        double numero;
         try {
-            numero = Long.parseLong(str); //conversão de String para long foi um sucesso, encontrou um número
+            numero = Double.parseDouble(str); //conversão de String para long foi um sucesso, encontrou um número
         } catch (NumberFormatException e) {
             numero = 0; //exceção na conversão de String para long, tentou converter uma palavra para número 
         }
